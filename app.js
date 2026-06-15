@@ -5582,7 +5582,9 @@ document.querySelectorAll(".bill-names-column .btn.soft").forEach(btn => {
         input.placeholder = `Type ${cleanTitle}...`;
 
         list.appendChild(input);
-        input.focus();
+        const textInput = input.querySelector(".bill-name-input");
+        if (textInput) textInput.focus();
+        else input.focus();
     });
 });
 

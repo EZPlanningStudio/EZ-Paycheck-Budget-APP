@@ -5192,8 +5192,12 @@
            order: 4;
        }
 
-       #billPaidAmountWrap {
+       #billCreditCardWrap {
            order: 5;
+       }
+
+       #billPaidAmountWrap {
+           order: 6;
        }
 
        .form-grid label:has(#billDate) {
