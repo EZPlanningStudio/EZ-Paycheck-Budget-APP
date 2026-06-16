@@ -480,6 +480,7 @@ function renderAllPaycheck() {
     renderPaycheckHeader();
     renderPaycheck();
     renderPaycheckNotes();
+    if (typeof updatePaycheckSetupVisibility === "function") updatePaycheckSetupVisibility();
 }
 
 function openNewPaycheckModal() {

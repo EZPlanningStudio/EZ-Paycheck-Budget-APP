@@ -1,5 +1,13 @@
 const STORAGE_KEY = "simplePaycheckBudgetDataV1";
 
+window.addEventListener("storage", (e) => {
+    if (e.key === STORAGE_KEY) {
+        data = loadData();
+        renderAll();
+        if (typeof renderAllPaycheck === "function") renderAllPaycheck();
+    }
+});
+
 const defaultData = {
     settings: {
         currencySymbol: "",
@@ -4754,7 +4762,7 @@ function getBillStatus(bill) {
 }
 
 function getDaysLabel(bill) {
-    if (bill.paid) return `<svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="var(--priority-4-color)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><polyline points="3,10 8,15 17,5"/></svg> Paid`;
+    if (bill.paid) return `<svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="var(--priority-4-color)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><polyline points="3,10 8,15 17,5"/></svg> ${getPaidLabel(bill)}`;
 
     const today = stripTime(new Date());
     const due = stripTime(parseLocalDate(getBillDisplayDate(bill)));
