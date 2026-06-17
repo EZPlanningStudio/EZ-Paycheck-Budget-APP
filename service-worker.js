@@ -27,7 +27,7 @@ self.addEventListener('activate', event => {
 
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
-  if (url.pathname.endsWith('app.js') || url.pathname.endsWith('styles.css')) {
+  if (url.pathname.endsWith('app.js') || url.pathname.endsWith('styles.css') || url.pathname.endsWith('paycheck.js')) {
     event.respondWith(fetch(event.request));
     return;
   }
