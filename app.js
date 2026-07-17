@@ -301,6 +301,7 @@ function init() {
     const isOnline = window.location.protocol === "https:";
     const menuActivation = document.getElementById("menuActivation");
     if (menuActivation) menuActivation.style.display = isActivated() ? "none" : "";
+    applyHiddenMenuItems();
     if (isMobile || isOnline) {
         const autoBackup = document.getElementById("autoBackupSection");
         if (autoBackup) autoBackup.style.display = "none";
@@ -840,6 +841,14 @@ function bindEvents() {
         }
     });
 
+    els.billPaidAmount.addEventListener("blur", () => {
+        const value = Number(els.billPaidAmount.value);
+
+        if (!Number.isNaN(value) && els.billPaidAmount.value !== "") {
+            els.billPaidAmount.value = value.toFixed(2);
+        }
+    });
+
     document.getElementById("calNavPeriod")?.addEventListener("change", (e) => {
         const [y, m] = e.target.value.split("-").map(Number);
         currentCalendarDate.setFullYear(y);
@@ -919,6 +928,9 @@ function bindEvents() {
     document.getElementById("undoBtn")?.addEventListener("click", undoChange);
     document.getElementById("redoBtn")?.addEventListener("click", redoChange);
 
+    document.getElementById("quickExportBtn")?.addEventListener("click", exportJson);
+    document.getElementById("quickImportBtn")?.addEventListener("click", smartImportBackup);
+
     document.getElementById("exportJson").addEventListener("click", exportJson);
     document.getElementById("backupNowBtn").addEventListener("click", async () => {
         await exportJson();
@@ -962,6 +974,16 @@ function bindEvents() {
         document.getElementById("helpModalText").innerHTML = helpIcon.dataset.help;
         document.getElementById("helpModal").classList.add("active");
     });
+
+    document.addEventListener("mouseover", (e) => {
+        const helpIcon = e.target.closest(".help-icon[data-help]");
+        if (helpIcon) showHelpIconTooltip(helpIcon);
+    });
+    document.addEventListener("mouseout", (e) => {
+        const helpIcon = e.target.closest(".help-icon[data-help]");
+        if (helpIcon) hideHelpIconTooltip();
+    });
+    window.addEventListener("scroll", hideHelpIconTooltip, true);
 
     // Delete recurring modal
     const closeDeleteModal = () => {
@@ -1373,6 +1395,7 @@ const sectionConfig = {
     settings: { main: "Settings", getLabel: null },
     backup: { main: "Backup", getLabel: null },
     quickstart: { main: "quick start", secondary: "guide", getLabel: null },
+    contact: { main: "contact", secondary: "us", getLabel: null },
 };
 
 function buildListLabel() {
@@ -1450,7 +1473,7 @@ function showSection(section) {
     renderPageHeader(section);
 
     const config = sectionConfig[section];
-    document.getElementById("pageTitle").classList.remove("page-calendar", "page-list", "page-monthly", "page-yearly", "page-settings", "page-backup", "page-quickstart");
+    document.getElementById("pageTitle").classList.remove("page-calendar", "page-list", "page-monthly", "page-yearly", "page-settings", "page-backup", "page-quickstart", "page-contact");
     document.getElementById("pageTitle").classList.add(`page-${section}`);
 
     if (config && typeof config.main !== "undefined") {
@@ -1462,13 +1485,19 @@ function showSection(section) {
 
     updateSectionLabel(section);
 
+    if (section === "list") {
+        if (typeof openTransactionListInfoModal === "function") openTransactionListInfoModal();
+    }
+
     if (section === "calendar") {
         selectedCalDay = null;
         renderCalendar();
+        if (typeof openCalendarInfoModal === "function") openCalendarInfoModal();
     }
 
     if (section === "paycheck") {
         renderAllPaycheck();
+        if (typeof openPaycheckInfoModal === "function") openPaycheckInfoModal();
     } else {
         document.querySelectorAll(".paycheck-interval").forEach(el => el.remove());
         document.getElementById("pageTitle")?.classList.remove("page-paycheck");
@@ -1477,12 +1506,87 @@ function showSection(section) {
     if (section === "monthly") {
         renderMonthlyInsights();
         renderMonthlyNotes();
+        if (typeof openMonthlyInfoModal === "function") openMonthlyInfoModal();
     }
 
     if (section === "yearly") {
         renderYearlySummary();
+        if (typeof openYearlyInfoModal === "function") openYearlyInfoModal();
     }
 }
+
+function openPaycheckInfoModal() {
+    if (localStorage.getItem("ezPaycheckPaycheckSeen") === "true") return;
+    setTimeout(() => {
+        const el = document.getElementById("paycheckInfoModal");
+        if (el) el.classList.add("active");
+    }, 50);
+}
+
+function closePaycheckInfoModal(dontShow = false) {
+    if (dontShow) localStorage.setItem("ezPaycheckPaycheckSeen", "true");
+    document.getElementById("paycheckInfoModal").classList.remove("active");
+}
+
+function openCalendarInfoModal() {
+    if (localStorage.getItem("ezPaycheckCalendarSeen") === "true") return;
+    setTimeout(() => {
+        const el = document.getElementById("calendarInfoModal");
+        if (el) el.classList.add("active");
+    }, 50);
+}
+
+function closeCalendarInfoModal(dontShow = false) {
+    if (dontShow) localStorage.setItem("ezPaycheckCalendarSeen", "true");
+    document.getElementById("calendarInfoModal").classList.remove("active");
+}
+
+window.closeCalendarInfoModal = closeCalendarInfoModal;
+
+function openTransactionListInfoModal() {
+    if (localStorage.getItem("ezPaycheckTransactionListSeen") === "true") return;
+    setTimeout(() => {
+        const el = document.getElementById("transactionListInfoModal");
+        if (el) el.classList.add("active");
+    }, 50);
+}
+
+function closeTransactionListInfoModal(dontShow = false) {
+    if (dontShow) localStorage.setItem("ezPaycheckTransactionListSeen", "true");
+    document.getElementById("transactionListInfoModal").classList.remove("active");
+}
+
+window.closeTransactionListInfoModal = closeTransactionListInfoModal;
+
+function openMonthlyInfoModal() {
+    if (localStorage.getItem("ezPaycheckMonthlySeen") === "true") return;
+    setTimeout(() => {
+        const el = document.getElementById("monthlyInfoModal");
+        if (el) el.classList.add("active");
+    }, 50);
+}
+
+function closeMonthlyInfoModal(dontShow = false) {
+    if (dontShow) localStorage.setItem("ezPaycheckMonthlySeen", "true");
+    document.getElementById("monthlyInfoModal").classList.remove("active");
+}
+
+function openYearlyInfoModal() {
+    if (localStorage.getItem("ezPaycheckYearlySeen") === "true") return;
+    setTimeout(() => {
+        const el = document.getElementById("yearlyInfoModal");
+        if (el) el.classList.add("active");
+    }, 50);
+}
+
+function closeYearlyInfoModal(dontShow = false) {
+    if (dontShow) localStorage.setItem("ezPaycheckYearlySeen", "true");
+    document.getElementById("yearlyInfoModal").classList.remove("active");
+}
+
+window.closePaycheckInfoModal = closePaycheckInfoModal;
+window.closeMonthlyInfoModal = closeMonthlyInfoModal;
+window.closeYearlyInfoModal = closeYearlyInfoModal;
 
 function renderAll() {
     const activeSection = localStorage.getItem("ezPaycheckActiveSection") || "list";
@@ -1571,6 +1675,28 @@ function renderSettings() {
     els.currencyPosition.value = data.settings.currencyPosition;
     els.weekStart.value = data.settings.weekStart;
     loadPaycheckSettings();
+    renderMenuVisibilitySettings();
+}
+
+const HIDEABLE_MENU_ITEMS = [
+    { section: "quickstart", label: "Quick Start Guide" },
+    { section: "contact", label: "Contact" }
+];
+
+function renderMenuVisibilitySettings() {
+    const el = document.getElementById("menuVisibilitySettings");
+    if (!el) return;
+    const hidden = getHiddenMenuItems();
+    el.innerHTML = HIDEABLE_MENU_ITEMS.map(item => {
+        const isHidden = hidden.includes(item.section);
+        return `<div class="menu-vis-row">
+            <span class="menu-vis-label">${escapeHtml(item.label)}</span>
+            <span class="menu-vis-right">
+                <span class="menu-vis-status">${isHidden ? "Hidden" : "Visible"}</span>
+                <button class="acc-link-btn" onclick="${isHidden ? "showMenuItem" : "hideMenuItem"}('${item.section}')">${isHidden ? "Show" : "Hide"}</button>
+            </span>
+        </div>`;
+    }).join("");
 }
 
 function generateRecurringBills(bill) {
@@ -1609,6 +1735,40 @@ function generateRecurringBills(bill) {
 function isActivated() {
     return localStorage.getItem("ezPaycheckActivated") === "true";
 }
+
+function getHiddenMenuItems() {
+    try {
+        const parsed = JSON.parse(localStorage.getItem("ezPaycheckHiddenMenuItems") || "[]");
+        return Array.isArray(parsed) ? parsed : [];
+    } catch {
+        return [];
+    }
+}
+
+function applyHiddenMenuItems() {
+    const hidden = getHiddenMenuItems();
+    document.querySelectorAll("nav button[data-section]").forEach(btn => {
+        btn.style.display = hidden.includes(btn.dataset.section) ? "none" : "";
+    });
+}
+
+function hideMenuItem(section) {
+    const hidden = getHiddenMenuItems();
+    if (!hidden.includes(section)) hidden.push(section);
+    localStorage.setItem("ezPaycheckHiddenMenuItems", JSON.stringify(hidden));
+    applyHiddenMenuItems();
+    if (localStorage.getItem("ezPaycheckActiveSection") === section) showSection("list");
+    if (typeof renderSettings === "function") renderSettings();
+}
+
+function showMenuItem(section) {
+    const hidden = getHiddenMenuItems().filter(s => s !== section);
+    localStorage.setItem("ezPaycheckHiddenMenuItems", JSON.stringify(hidden));
+    applyHiddenMenuItems();
+    if (typeof renderSettings === "function") renderSettings();
+}
+window.hideMenuItem = hideMenuItem;
+window.showMenuItem = showMenuItem;
 
 function showActivationModal() {
     document.getElementById("activationCodeInput").value = "";
@@ -1671,9 +1831,9 @@ function handleSaveBill(event) {
         type: existing ? existing.type : els.billType.value,
         creditCard: els.billCreditCard.value === "yes",
         amount: Number(els.billAmount.value),
-        actualAmount: existing ? (els.billPaidAmount.value !== "" ? Number(els.billPaidAmount.value) : null) : null,
+        actualAmount: els.billPaidAmount.value !== "" ? Number(els.billPaidAmount.value) : null,
         dueDate: existing ? existing.dueDate : els.billDate.value,
-        actualDate: existing ? (els.billPaidDate.value !== "" ? els.billPaidDate.value : null) : null,
+        actualDate: els.billPaidDate.value !== "" ? els.billPaidDate.value : null,
         priority: Number(els.billPriority.value),
         frequency: existing ? existing.frequency : els.billFrequency.value,
         interval: existing ? existing.interval : (Number(els.billInterval.value) || 1),
@@ -1686,7 +1846,7 @@ function handleSaveBill(event) {
         { elId: "billCategory", valid: () => els.billCategory.value !== "" },
         { elId: "billName", valid: () => els.billName.value !== "" },
         { elId: "billType", valid: () => els.billType.value !== "" },
-        { elId: "billAmount", valid: () => els.billAmount.value !== "" && Number(els.billAmount.value) > 0 },
+        { elId: "billAmount", valid: () => els.billAmount.value !== "" && Number(els.billAmount.value) >= 0 },
         { elId: "billDate", valid: () => els.billDate.value !== "" || (!!els.editingId.value && !!data.bills.find(b => b.id === els.editingId.value)?.dueDate) },
         { elId: "billPriority", valid: () => els.billPriority.required === false || els.billPriority.value !== "" },
         { elId: "billFrequency", valid: () => els.billFrequency.value !== "" }
@@ -1915,6 +2075,7 @@ function resetHelpTexts() {
         billCategory: "Select the category for this bill. Categories are managed in the Settings page.",
         billName: "Select the transaction name from the dropdown. Transaction names are managed in the Settings page.",
         billType: "Select Payment for regular transactions and expenses. Select Refund for reimbursements or returned payments.",
+        billAmount: "Enter the amount you're planning for this transaction. Always enter a positive number — the transaction type (Received, Returned, Deposit, Withdrawal, Payment, etc.) determines the direction of the money.<br><br>Making a partial or extra payment toward something you already planned? Enter <strong>0</strong> here instead of a new planned amount — a \"New/Paid Amount\" field will appear for the real amount, without inflating your planned total.<br><br>Wasn't planned at all? Enter <strong>0</strong> here too — put the real amount in New/Paid Amount below instead of guessing a planned figure.<br><br>Once a real payment is recorded, this field locks — it stays as your original plan; only the New/Paid Amount can change from then on.",
         billFrequency: "Select how often this transaction repeats. Choose One-time for a single payment, or Daily, Weekly, Monthly, Yearly for recurring transactions. If you select a recurring frequency, Interval and End Date fields will appear.",
         billDate: "Enter the transaction's due date. For recurring transactions, this is the first due date — the recurring series starts from this date. This date is used to organize and calculate expected amounts across all reports.",
         billFrequency: "Select how often this transaction repeats. Choose One-time for a single payment, or Daily, Weekly, Monthly, Yearly for recurring transactions. If you select a recurring frequency, Interval and End Date fields will appear.",
@@ -1962,11 +2123,6 @@ function editBill(id) {
     els.billPaidAmount.value = bill.actualAmount != null ? Number(bill.actualAmount).toFixed(2) : "";
     els.billPaidDate.value = bill.actualDate || "";
     els.billPaidDate.classList.toggle("has-value", !!bill.actualDate);
-    els.billPaidAmount.addEventListener("blur", () => {
-        if (els.billPaidAmount.value !== "") {
-            els.billPaidAmount.value = Number(els.billPaidAmount.value).toFixed(2);
-        }
-    });
     els.billPaidDate.addEventListener("change", () => {
         document.getElementById("updateFromHere").style.display = (els.billPaidDate.value || !isRecurring) ? "none" : "";
     });
@@ -2075,6 +2231,11 @@ function updateCreditCardVisibility() {
     updateCreditCardLabel();
 }
 
+function updateBillPaidAmountVisibility() {
+    const isZero = els.billAmount.value !== "" && Number(els.billAmount.value) === 0;
+    els.billPaidAmountWrap.style.display = isZero ? "" : "none";
+}
+
 function updatePaidLabels() {
     const category = els.billCategory.value;
     const type = els.billType.value;
@@ -2085,33 +2246,33 @@ function updatePaidLabels() {
 
     let amountText = "New/Paid Amount";
     let dateText = "New/Paid Date";
-    let amountHelp = "Enter a New/Paid Amount if the actual paid amount differs from the planned Amount.";
+    let amountHelp = "Enter a New/Paid Amount if the actual paid amount differs from the planned Amount. If Planned Amount is 0, enter the real amount of an unplanned transaction here.";
     let dateHelp = "Enter a New/Paid Date if the actual payment date differs from the original Due Date.";
 
     if (isIncomeCategory(category)) {
         if (type === "payment") {
             amountText = "New/Received Amount";
-            amountHelp = "Enter a New/Received Amount if the actual received amount differs from the planned Amount.";
+            amountHelp = "Enter a New/Received Amount if the actual received amount differs from the planned Amount. If Planned Amount is 0, enter the real amount of an unplanned transaction here.";
         } else {
             amountText = "New/Returned Amount";
-            amountHelp = "Enter a New/Returned Amount if the actual returned amount differs from the planned Amount.";
+            amountHelp = "Enter a New/Returned Amount if the actual returned amount differs from the planned Amount. If Planned Amount is 0, enter the real amount of an unplanned transaction here.";
         }
         dateText = "New/Actual Date";
         dateHelp = "Enter the actual date if it differs from the original Due Date.";
     } else if (isSavingsCategory(category)) {
         if (type === "payment") {
             amountText = "New/Saved Amount";
-            amountHelp = "Enter a New/Saved Amount if the actual saved amount differs from the planned Amount.";
+            amountHelp = "Enter a New/Saved Amount if the actual saved amount differs from the planned Amount. If Planned Amount is 0, enter the real amount of an unplanned transaction here.";
         } else {
             amountText = "New/Withdrawn Amount";
-            amountHelp = "Enter a New/Withdrawn Amount if the actual withdrawn amount differs from the planned Amount.";
+            amountHelp = "Enter a New/Withdrawn Amount if the actual withdrawn amount differs from the planned Amount. If Planned Amount is 0, enter the real amount of an unplanned transaction here.";
         }
         dateText = "New/Actual Date";
         dateHelp = "Enter the actual date if it differs from the original Due Date.";
     } else if (type === "refund") {
         amountText = "New/Received Amount";
         dateText = "New/Actual Date";
-        amountHelp = "Enter a New/Received Amount if the actual received amount differs from the planned Amount.";
+        amountHelp = "Enter a New/Received Amount if the actual received amount differs from the planned Amount. If Planned Amount is 0, enter the real amount of an unplanned transaction here.";
         dateHelp = "Enter the actual date if it differs from the original Due Date.";
     }
 
@@ -2372,7 +2533,7 @@ function renderBills() {
                 <span  >${formatMoney(getBillDisplayAmount(bill))}</span>
     </span>
 
-    ${bill.actualAmount != null && Number(bill.actualAmount) !== Number(bill.amount)
+    ${bill.actualAmount != null && Number(bill.amount) > 0 && Number(bill.actualAmount) !== Number(bill.amount)
                 ? `<span class="bill-original-amount">${formatMoney(bill.amount)}</span>`
                 : ""
             }
@@ -3559,9 +3720,7 @@ function renderCategoryCard(cat, color, monthBills, month, year, overdraftAmount
                 name: bill.name,
                 totalExp: 0,
                 totalPaid: 0,
-                count: 0,
-                allPaid: true,
-                anyUnpaid: false
+                count: 0
             };
         }
         const expAmt = parseFloat(bill.amount) || 0;
@@ -3569,7 +3728,6 @@ function renderCategoryCard(cat, color, monthBills, month, year, overdraftAmount
         const displayAmt = parseFloat(getBillDisplayAmount(bill)) || 0;
         paymentGroups[key].totalExp += expAmt;
         if (bill.paid) paymentGroups[key].totalPaid += Math.max(0, displayAmt - refundedAmt);
-        if (!bill.paid) { paymentGroups[key].allPaid = false; paymentGroups[key].anyUnpaid = true; }
         paymentGroups[key].count++;
     });
 
@@ -3578,7 +3736,7 @@ function renderCategoryCard(cat, color, monthBills, month, year, overdraftAmount
             <tr>
                 <td><div class="mi-td-name" style="color:${color.text};">${g.name}${g.count > 1 ? ` <span style="font-size:11px;color:var(--muted);">×${g.count}</span>` : ""}</div></td>
                 <td class="mi-td-exp">${formatMoney(g.totalExp)}</td>
-                <td style="color:${g.allPaid ? color.text : "var(--line)"};">${g.allPaid ? formatMoney(g.totalPaid) : "—"}</td>
+                <td style="color:${g.totalPaid > 0 ? color.text : "var(--line)"};">${g.totalPaid > 0 ? formatMoney(g.totalPaid) : "—"}</td>
             </tr>`);
 
     const refundRows = standaloneRefunds.map(bill => {
@@ -4819,12 +4977,14 @@ function updateCurrencyInputDisplay() {
 }
 
 function formatMoney(amount) {
-    const value = Number(amount || 0).toFixed(2);
+    const num = Number(amount || 0);
+    const sign = num < 0 ? "-" : "";
+    const value = Math.abs(num).toFixed(2);
     const currencySymbol = String(data.settings.currencySymbol || "").split("|")[0];
 
     return data.settings.currencyPosition === "before"
-        ? `${currencySymbol}${value}`
-        : `${value} ${currencySymbol}`;
+        ? `${sign}${currencySymbol}${value}`
+        : `${sign}${value} ${currencySymbol}`;
 }
 
 function formatDisplayDate(date) {
@@ -5382,6 +5542,29 @@ function escapeHtml(value) {
         .replaceAll("'", "&#039;");
 }
 
+function showHelpIconTooltip(iconEl) {
+    const tip = document.getElementById("helpIconTooltip");
+    if (!tip) return;
+    const rect = iconEl.getBoundingClientRect();
+    const margin = 6;
+    const tipRect = tip.getBoundingClientRect();
+
+    let left = rect.left + rect.width / 2 - tipRect.width / 2;
+    left = Math.max(margin, Math.min(left, window.innerWidth - tipRect.width - margin));
+
+    let top = rect.top - tipRect.height - 8;
+    if (top < margin) top = rect.bottom + 8;
+
+    tip.style.left = `${left}px`;
+    tip.style.top = `${top}px`;
+    tip.classList.add("active");
+}
+
+function hideHelpIconTooltip() {
+    const tip = document.getElementById("helpIconTooltip");
+    if (tip) tip.classList.remove("active");
+}
+
 function saveBillNames(shouldSave = true) {
     const oldCategories = [...data.categories];
     const billNameGroups = [];
@@ -5652,7 +5835,7 @@ function openCalBillModal(billId) {
                 <div class="bill-meta bill-main-line" style="justify-content:space-between; padding-right:28px;">
                 <span class="bill-title-inline app-tooltip-trigger"><span class="bill-title-text">${escapeHtml(bill.name)}</span><span class="app-tooltip">${data.priorityNames[Number(bill.priority)] || "Priority"}</span></span>
                 <span class="bill-amount-wrap">
-    ${bill.actualAmount != null && Number(bill.actualAmount) !== Number(bill.amount)
+    ${bill.actualAmount != null && Number(bill.amount) > 0 && Number(bill.actualAmount) !== Number(bill.amount)
             ? `<span class="bill-original-amount">${formatMoney(bill.amount)}</span>`
             : ""
         }
