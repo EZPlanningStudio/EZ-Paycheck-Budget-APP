@@ -220,6 +220,7 @@
        width: 240px;
        scrollbar-width: thin;
        scrollbar-color: var(--line) transparent;
+       z-index: 20;
    }
 
    aside::-webkit-scrollbar {
@@ -3731,6 +3732,21 @@
        line-height: 1.5;
    }
 
+   .faq-item {
+       padding: 16px 0;
+       border-top: 1px solid var(--line);
+   }
+
+   .faq-item:first-child {
+       padding-top: 0;
+       border-top: none;
+   }
+
+   .faq-item .backup-guide-toggle {
+       font-size: 15px;
+       font-weight: 600;
+   }
+
    .note {
        background: var(--pink-soft);
        color: var(--note-dark);
@@ -3951,6 +3967,13 @@
 
    .modal-box label {
        margin-top: 0px;
+   }
+
+   .modal-actions {
+       display: flex;
+       gap: 10px;
+       justify-content: center;
+       margin-top: 20px;
    }
 
    #addBillModal .modal-box {
